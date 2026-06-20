@@ -33,7 +33,21 @@ void moveBullet(float bullet[], sf::Clock& bulletClock);
 void drawBullet(sf::RenderWindow& window, float bullet[], sf::Sprite& bulletSprite);
 //player movement
 void moveplayer(float player[]);
-
+void drawMushroom(sf::RenderWindow& window, float mushroom[], sf::Sprite& mushroomSprite);
+//mushroom class
+class mushroom{
+int x;
+int y;
+int health;
+mushroom(int x, int y){
+	this->x = x;
+	this->y = y;
+	this->health = 2;
+}
+void sethealth(){
+	health-=1;
+}
+};
 
 
 
@@ -88,6 +102,22 @@ int main()
 	bulletSprite.setTexture(bulletTexture);
 	bulletSprite.setTextureRect(sf::IntRect(0, 0, boxPixelsX, boxPixelsY));
 
+//mushroom generation
+int x=rand() % 11 + 20;
+mushroom *mush;
+mush=new mushrooms[x];
+sf::Texture mushroomtexture;
+sf::Sprite mushrooms;
+mushroomtexture.loadFromFile("Textures/mushroom.png");
+mushrooms.setTexture(mushroomexture);
+	mushrooms.setTextureRect(sf::IntRect(0, 0, boxPixelsX, boxPixelsY));
+for(int i = 0; i < 20; i++){
+mush[i]=mushroom(rand());
+	
+
+}
+
+
 	while(window.isOpen()) {
 
 		//moveplayer with arrows
@@ -99,14 +129,20 @@ int main()
 		// Be vary of the order you call them, SFML draws in order.  //
 		//                                                           //
 		///////////////////////////////////////////////////////////////
-        moveplayer(player);
+  
 		window.draw(backgroundSprite);
 		drawPlayer(window, player, playerSprite);
+		moveplayer(player);
+		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && bullet[exists] == false){
+			bullet[x] = player[x];
+			bullet[y] = player[y] - boxPixelsY;
+			bullet[exists] = true;
+		}
 		if (bullet[exists] == true) {
 			moveBullet(bullet, bulletClock);
 			drawBullet(window, bullet, bulletSprite);
 		}
-		moveplayer(player);
+		
 
 		sf::Event e;
 		while (window.pollEvent(e)) {
@@ -159,5 +195,12 @@ void moveplayer(float player[]) {
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player[y] < resolutionY - boxPixelsY){
 		player[y] += 0.5;
 	}
+void drawMushroom(sf::RenderWindow& window, float mushroom[], sf::Sprite& mushroomSprite){
+sf::Texture mushroomtexture;
+
+
+
+}
+
 
 }
