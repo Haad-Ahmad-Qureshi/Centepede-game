@@ -31,13 +31,14 @@ const int exists = 2;
 void drawPlayer(sf::RenderWindow& window, float player[], sf::Sprite& playerSprite);
 void moveBullet(float bullet[], sf::Clock& bulletClock);
 void drawBullet(sf::RenderWindow& window, float bullet[], sf::Sprite& bulletSprite);
-
+//player movement
+void moveplayer(float player[]);
 int main()
 {
 	srand(time(0));
 
 	// Declaring RenderWindow.
-	sf::RenderWindow window(sf::VideoMode(resolutionX, resolutionY), "Centipede", sf::Style::Close | sf::Style::Titlebar);
+	sf::RenderWindow window(sf::VideoMode({resolutionX, resolutionY}), "Centipede", sf::Style::Close |sf::Style::Titlebar);
 
 	// Used to resize your window if it's too big or too small. Use according to your needs.
 	window.setSize(sf::Vector2u(640, 640)); // Recommended for 1366x768 (768p) displays.
@@ -84,6 +85,25 @@ int main()
 
 	while(window.isOpen()) {
 
+		//moveplayer with arrows
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && player[x] > 0){
+		player[x] -= 0.5;
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && player[x] < resolutionX - boxPixelsX)
+		player[x] += 0.5;
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player[y] > 0)
+	{
+		if(player[y]< (boxPixelsY*5)){
+	       player[y] -=0.5;
+		}else{
+        player[y] = (boxPixelsY*5);
+	    }
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player[y] < resolutionY - boxPixelsY){
+		player[y] += 0.5;
+	}
+
+
 		///////////////////////////////////////////////////////////////
 		//                                                           //
 		// Call Your Functions Here. Some have been written for you. //
@@ -97,6 +117,7 @@ int main()
 			moveBullet(bullet, bulletClock);
 			drawBullet(window, bullet, bulletSprite);
 		}
+		moveplayer(player);
 
 		sf::Event e;
 		while (window.pollEvent(e)) {
