@@ -33,6 +33,11 @@ void moveBullet(float bullet[], sf::Clock& bulletClock);
 void drawBullet(sf::RenderWindow& window, float bullet[], sf::Sprite& bulletSprite);
 //player movement
 void moveplayer(float player[]);
+
+
+
+
+
 int main()
 {
 	srand(time(0));
@@ -86,23 +91,7 @@ int main()
 	while(window.isOpen()) {
 
 		//moveplayer with arrows
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && player[x] > 0){
-		player[x] -= 0.5;
-	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && player[x] < resolutionX - boxPixelsX)
-		player[x] += 0.5;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player[y] > 0)
-	{
-		if(player[y]< (boxPixelsY*5)){
-	       player[y] -=0.5;
-		}else{
-        player[y] = (boxPixelsY*5);
-	    }
-	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player[y] < resolutionY - boxPixelsY){
-		player[y] += 0.5;
-	}
-
+	
 
 		///////////////////////////////////////////////////////////////
 		//                                                           //
@@ -110,7 +99,7 @@ int main()
 		// Be vary of the order you call them, SFML draws in order.  //
 		//                                                           //
 		///////////////////////////////////////////////////////////////
-
+        moveplayer(player);
 		window.draw(backgroundSprite);
 		drawPlayer(window, player, playerSprite);
 		if (bullet[exists] == true) {
@@ -152,4 +141,23 @@ void moveBullet(float bullet[], sf::Clock& bulletClock) {
 void drawBullet(sf::RenderWindow& window, float bullet[], sf::Sprite& bulletSprite) {
 	bulletSprite.setPosition(bullet[x], bullet[y]);
 	window.draw(bulletSprite);
+}
+void moveplayer(float player[]) {
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && player[x] > 0){
+		player[x] -= 0.5;
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && player[x] < resolutionX - boxPixelsX)
+		player[x] += 0.5;
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player[y] > 0)
+	{
+		if(player[y]< (boxPixelsY*5)){
+	       player[y] -=0.5;
+		}else{
+        player[y] = (boxPixelsY*5);
+	    }
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player[y] < resolutionY - boxPixelsY){
+		player[y] += 0.5;
+	}
+
 }
