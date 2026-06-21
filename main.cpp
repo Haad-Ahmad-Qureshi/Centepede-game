@@ -1,6 +1,8 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
+#include <SFML/Window/Keyboard.hpp>
+#include <SFML/Window.hpp>
 
 using namespace std;
 
@@ -36,16 +38,30 @@ void moveplayer(float player[]);
 void drawMushroom(sf::RenderWindow& window, float mushroom[], sf::Sprite& mushroomSprite);
 //mushroom class
 class mushroom{
-int x;
-int y;
+int mx;
+int my;
 int health;
+public:
+mushroom(){
+	mx=0;
+	my=0;
+	health=2;
+}
 mushroom(int x, int y){
-	this->x = x;
-	this->y = y;
-	this->health = 2;
+	this->mx = x;
+	this->my = y;
+}
+int getx(){
+	return mx;
+}
+int gety(){
+	return my;
 }
 void sethealth(){
 	health-=1;
+}
+int gethealth(){
+	return health;
 }
 };
 
@@ -75,8 +91,8 @@ int main()
 
 	// Initializing Background.
 	sf::Texture backgroundTexture;
-	sf::Sprite backgroundSprite;
 	backgroundTexture.loadFromFile("Textures/background.png");
+	sf::Sprite backgroundSprite(backgroundTexture);
 	backgroundSprite.setTexture(backgroundTexture);
 	backgroundSprite.setColor(sf::Color(255, 255, 255, 255 * 0.20)); // Reduces Opacity to 25%
 
@@ -85,10 +101,10 @@ int main()
 	player[x] = (gameColumns / 2) * boxPixelsX;
 	player[y] = (gameColumns * 3 / 4) * boxPixelsY;
 	sf::Texture playerTexture;
-	sf::Sprite playerSprite;
 	playerTexture.loadFromFile("Textures/player.png");
+	sf::Sprite playerSprite(playerTexture);
 	playerSprite.setTexture(playerTexture);
-	playerSprite.setTextureRect(sf::IntRect(0, 0, boxPixelsX, boxPixelsY));
+	playerSprite.setTextureRect(sf::IntRect({0,0}, {boxPixelsX, boxPixelsY}));
 
 	// Initializing Bullet and Bullet Sprites.
 	float bullet[3] = {};
@@ -97,24 +113,23 @@ int main()
 	bullet[exists] = true;
 	sf::Clock bulletClock;
 	sf::Texture bulletTexture;
-	sf::Sprite bulletSprite;
 	bulletTexture.loadFromFile("Textures/bullet.png");
+	sf::Sprite bulletSprite(bulletTexture);
 	bulletSprite.setTexture(bulletTexture);
-	bulletSprite.setTextureRect(sf::IntRect(0, 0, boxPixelsX, boxPixelsY));
+	bulletSprite.setTextureRect(sf::IntRect({0,0}, {boxPixelsX, boxPixelsY}));
 
 //mushroom generation
-int x=rand() % 11 + 20;
+int s=rand() % 11 + 20;
 mushroom *mush;
-mush=new mushrooms[x];
+mush=new mushroom[s];
 sf::Texture mushroomtexture;
-sf::Sprite mushrooms;
 mushroomtexture.loadFromFile("Textures/mushroom.png");
-mushrooms.setTexture(mushroomexture);
-	mushrooms.setTextureRect(sf::IntRect(0, 0, boxPixelsX, boxPixelsY));
-for(int i = 0; i < 20; i++){
-mush[i]=mushroom(rand());
-	
-
+sf::Sprite mushrooms(mushroomtexture);
+mushrooms.setTexture(mushroomtexture);
+	mushrooms.setTextureRect(sf::IntRect({0,0}, {boxPixelsX, boxPixelsY}));
+for(int i = 0; i < s; i++){
+mush[i]=mushroom(rand()%gameColumns*32,rand()%(gameRows-5)*32);
+gameGrid[mush[i].getx()/32][mush[i].gety()/32]=1;
 }
 
 
@@ -132,8 +147,11 @@ mush[i]=mushroom(rand());
   
 		window.draw(backgroundSprite);
 		drawPlayer(window, player, playerSprite);
+		for(int i = 0; i < s; i++){
+			drawMushroom(window, &mush[i], mushrooms);
+		}
 		moveplayer(player);
-		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && bullet[exists] == false){
+		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && bullet[exists] == false){
 			bullet[x] = player[x];
 			bullet[y] = player[y] - boxPixelsY;
 			bullet[exists] = true;
@@ -142,14 +160,30 @@ mush[i]=mushroom(rand());
 			moveBullet(bullet, bulletClock);
 			drawBullet(window, bullet, bulletSprite);
 		}
-		
+	 for(int i=0;i<s;i++){
+		if(mush[i].gethealth()>0){
+		  if(mush[i].getx()==bullet[x] && mush[i].gety()==bullet[y]){
+			mush[i].sethealth();
+			bullet[exists]=false;
+	 		 if(mush[i].gethealth() == 0){
+               for(int j = i; j < s-1; j++){
+                  mush[j] = mush[j+1];
+                }
+                  s--; 
+             }
 
-		sf::Event e;
-		while (window.pollEvent(e)) {
-			if (e.type == sf::Event::Closed) {
-				return 0;
-			}
-		}		
+		  }
+		}
+	 }
+	    
+		std::optional<sf::Event> event;
+		while (const std::optional event = window.pollEvent()) {
+
+          if (event->is<sf::Event::Closed>()) {
+            window.close();
+          }
+ 
+       }	
 		window.display();
 		window.clear();
 	}
@@ -162,9 +196,14 @@ mush[i]=mushroom(rand());
 ////////////////////////////////////////////////////////////////////////////
 
 void drawPlayer(sf::RenderWindow& window, float player[], sf::Sprite& playerSprite) {
-	playerSprite.setPosition(player[x], player[y]);
+	playerSprite.setPosition(sf::Vector2f(player[x], player[y]));
 	window.draw(playerSprite);
 }
+void drawMushroom(sf::RenderWindow& window, mushroom* mushroom, sf::Sprite& mushroomSprite){
+mushroomSprite.setPosition(sf::Vector2f(mushroom->getx(), mushroom->gety()));
+window.draw(mushroomSprite);
+}
+
 void moveBullet(float bullet[], sf::Clock& bulletClock) {
 	if (bulletClock.getElapsedTime().asMilliseconds() < 20)
 		return;
@@ -175,16 +214,16 @@ void moveBullet(float bullet[], sf::Clock& bulletClock) {
 		bullet[exists] = false;
 }
 void drawBullet(sf::RenderWindow& window, float bullet[], sf::Sprite& bulletSprite) {
-	bulletSprite.setPosition(bullet[x], bullet[y]);
+    bulletSprite.setPosition(sf::Vector2f(bullet[x], bullet[y]));
 	window.draw(bulletSprite);
 }
 void moveplayer(float player[]) {
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && player[x] > 0){
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && player[x] > 0){
 		player[x] -= 0.5;
 	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && player[x] < resolutionX - boxPixelsX)
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) && player[x] < resolutionX - boxPixelsX)
 		player[x] += 0.5;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player[y] > 0)
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && player[y] > 0)
 	{
 		if(player[y]< (boxPixelsY*5)){
 	       player[y] -=0.5;
@@ -192,15 +231,12 @@ void moveplayer(float player[]) {
         player[y] = (boxPixelsY*5);
 	    }
 	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player[y] < resolutionY - boxPixelsY){
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && player[y] < resolutionY - boxPixelsY){
 		player[y] += 0.5;
 	}
-void drawMushroom(sf::RenderWindow& window, float mushroom[], sf::Sprite& mushroomSprite){
-sf::Texture mushroomtexture;
-
-
-
 }
 
 
-}
+
+
+
