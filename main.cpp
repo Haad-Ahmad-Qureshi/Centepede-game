@@ -1,8 +1,9 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
-#include <SFML/Window/Keyboard.hpp>
-#include <SFML/Window.hpp>
+
+
+
 
 using namespace std;
 
@@ -24,19 +25,7 @@ const int x = 0;
 const int y = 1;
 const int exists = 2;
 
-/////////////////////////////////////////////////////////////////////////////
-//                                                                         //
-// Write your functions declarations here. Some have been written for you. //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
 
-void drawPlayer(sf::RenderWindow& window, float player[], sf::Sprite& playerSprite);
-void moveBullet(float bullet[], sf::Clock& bulletClock);
-void drawBullet(sf::RenderWindow& window, float bullet[], sf::Sprite& bulletSprite);
-//player movement
-void moveplayer(float player[]);
-void drawMushroom(sf::RenderWindow& window, float mushroom[], sf::Sprite& mushroomSprite);
-//mushroom class
 class mushroom{
 int mx;
 int my;
@@ -64,6 +53,18 @@ int gethealth(){
 	return health;
 }
 };
+/////////////////////////////////////////////////////////////////////////////
+//                                                                         //
+// Write your functions declarations here. Some have been written for you. //
+//                                                                         //
+/////////////////////////////////////////////////////////////////////////////
+void drawPlayer(sf::RenderWindow& window, float player[], sf::Sprite& playerSprite);
+void moveBullet(float bullet[], sf::Clock& bulletClock);
+void drawBullet(sf::RenderWindow& window, float bullet[], sf::Sprite& bulletSprite);
+//player movement
+void moveplayer(float player[]);
+void drawMushroom(sf::RenderWindow& window, mushroom* m, sf::Sprite& mushroomSprite);
+//mushroom class
 
 
 
@@ -199,8 +200,8 @@ void drawPlayer(sf::RenderWindow& window, float player[], sf::Sprite& playerSpri
 	playerSprite.setPosition(sf::Vector2f(player[x], player[y]));
 	window.draw(playerSprite);
 }
-void drawMushroom(sf::RenderWindow& window, mushroom* mushroom, sf::Sprite& mushroomSprite){
-mushroomSprite.setPosition(sf::Vector2f(mushroom->getx(), mushroom->gety()));
+void drawMushroom(sf::RenderWindow& window, mushroom* m, sf::Sprite& mushroomSprite){
+mushroomSprite.setPosition(sf::Vector2f(m->getx(), m->gety()));
 window.draw(mushroomSprite);
 }
 
