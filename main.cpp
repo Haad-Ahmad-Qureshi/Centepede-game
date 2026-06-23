@@ -126,9 +126,10 @@ int main()
     sf::Sprite mushSprite(mushTex);
     mushSprite.setTextureRect(sf::IntRect({0,0},{boxPixelsX,boxPixelsY}));
 
-    for(int i=0;i<s;i++)
+    for(int i=0;i<s;i++){
         mush[i] = mushroom(rand()%gameColumns*32, rand()%(gameRows-5)*32);
-
+		gameGrid[mush[i].getx()/32][mush[i].gety()/32] = 1;
+}
     centepede* cent = new centepede[l];
 
     sf::Texture headTex, bodyTex;
@@ -196,6 +197,7 @@ int main()
                     bullet[exists] = false;
 
                     if(mush[i].gethealth() <= 0){
+						gameGrid[mush[i].getx()/32][mush[i].gety()/32] = 0;
                         for(int j=i;j<s-1;j++)
                             mush[j]=mush[j+1];
 
@@ -281,27 +283,49 @@ void drawcentepede(sf::RenderWindow& window, centepede* c,
 
 void movecentepede(centepede* c, int l)
 {
-    for (int i = 0; i < l; i++)
+    int head = l - 1;
+
+    int oldx[12];
+    int oldy[12];
+
+    for(int i = 0; i < l; i++)
     {
-        if (c[i].getdirection() == 1)
-        {
-            c[i].setx(c[i].getx() + 32);
+        oldx[i] = c[i].getx();
+        oldy[i] = c[i].gety();
+    }
 
-            if (c[i].getx() >= resolutionX)
-            {
-                c[i].sety(c[i].gety() + 32);
-                c[i].switchdirection();
-            }
-        }
-        else if (c[i].getdirection() == -1)
-        {
-            c[i].setx(c[i].getx() - 32);
+    int nextX;
+    int nextY = c[head].gety();
 
-            if (c[i].getx() <= 0)
-            {
-                c[i].sety(c[i].gety() + 32);
-                c[i].switchdirection();
-            }
-        }
+    if(c[head].getdirection() == 1)
+        nextX = c[head].getx() + 32;
+    else
+        nextX = c[head].getx() - 32;
+
+    bool needTurn = false;
+
+    // Wall detection
+    if(nextX < 0 || nextX >= resolutionX)
+        needTurn = true;
+
+    // Mushroom detection
+    else if(gameGrid[nextX / 32][nextY / 32] == 1)
+        needTurn = true;
+
+    if(needTurn)
+    {
+        c[head].sety(c[head].gety() + 32);
+        c[head].switchdirection();
+    }
+    else
+    {
+        c[head].setx(nextX);
+    }
+
+    // Body follows previous positions
+    for(int i = l - 2; i >= 0; i--)
+    {
+        c[i].setx(oldx[i + 1]);
+        c[i].sety(oldy[i + 1]);
     }
 }
