@@ -3,14 +3,15 @@
 #include <SFML/Audio.hpp>
 
 using namespace std;
-
+int score = 0;
 const int resolutionX = 960;
 const int resolutionY = 960;
 const int boxPixelsX = 32;
 const int boxPixelsY = 32;
 const int gameRows = resolutionX / boxPixelsX;
 const int gameColumns = resolutionY / boxPixelsY;
-int l = 12;
+
+bool flag=true;
 
 int gameGrid[gameRows][gameColumns] = {};
 
@@ -45,7 +46,9 @@ public:
     void switchdirection(){
         direction = -direction;
     }
-
+void settype(string t){
+    type=t;
+}
     string gettype(){ return type; }
 };
 
@@ -76,8 +79,9 @@ void moveplayer(float player[]);
 void moveBullet(float bullet[], sf::Clock& clock);
 void drawBullet(sf::RenderWindow& window, float bullet[], sf::Sprite& sprite);
 void drawMushroom(sf::RenderWindow& window, mushroom* m, sf::Sprite& sprite);
-void drawcentepede(sf::RenderWindow& window, centepede* c, sf::Sprite& head, sf::Sprite& body);
+void drawcentepede(sf::RenderWindow& window, centepede* c,sf::Sprite& head,sf::Sprite& body,int l);
 void movecentepede(centepede* c, int l);
+void drawgameover(sf::RenderWindow& window, sf::Sprite& gameover);
 
 // ---------------- MAIN ----------------
 int main()
@@ -96,6 +100,11 @@ int main()
     bgTex.loadFromFile("Textures/background.png");
     sf::Sprite bg(bgTex);
     bg.setColor(sf::Color(255,255,255,64));
+sf::Texture gameovertex;
+gameovertex.loadFromFile("Textures/over.jpeg");
+sf::Sprite gameover(gameovertex);
+    gameover.setTextureRect(sf::IntRect({0,0},{960,960}));
+
 
     float player[2];
     player[x] = (gameColumns / 2) * boxPixelsX;
@@ -130,24 +139,44 @@ int main()
         mush[i] = mushroom(rand()%gameColumns*32, rand()%(gameRows-5)*32);
 		gameGrid[mush[i].getx()/32][mush[i].gety()/32] = 1;
 }
-    centepede* cent = new centepede[l];
-
+//centepede creation
+vector<vector<centepede>> centipedes;
     sf::Texture headTex, bodyTex;
     headTex.loadFromFile("Textures/c_head_left_walk.png");
     bodyTex.loadFromFile("Textures/c_body_left_walk.png");
 
     sf::Sprite head(headTex);
+    head.setTextureRect(sf::IntRect({0,0},{boxPixelsX,boxPixelsY}));
+	
+
     sf::Sprite body(bodyTex);
+    body.setTextureRect(sf::IntRect({0,0},{boxPixelsX,boxPixelsY}));
+vector<centepede> first;
 
-    for(int i=0;i<l-1;i++)
-        cent[i] = centepede(i*32,0,1,"body");
+for(int i = 0; i < 12; i++)
+{
+    first.push_back(centepede(i*32, 0, 1, "body"));
+}
 
-    cent[l-1] = centepede((l-1)*32,0,1,"head");
+first[0].settype("head") ;
 
-    sf::Clock moveClock;
+centipedes.push_back(first);
 
+sf::Clock moveClock;
+    sf::Clock pclock;
+
+
+    // score display 
+sf::Font font;
+if (!font.openFromFile("Fonts/Roboto-Regular.ttf")) {
+    cout << "Font failed to load\n";
+}
+sf::Text scoreText(font);
+scoreText.setCharacterSize(24);
+scoreText.setFillColor(sf::Color::White);
+scoreText.setPosition({10.f, 10.f});
     // ---------------- LOOP ----------------
-    while(window.isOpen())
+    while(window.isOpen()&& flag==true)
     {
         while(auto event = window.pollEvent())
         {
@@ -157,7 +186,8 @@ int main()
 
         window.clear();
         window.draw(bg);
-
+        scoreText.setString("Score: " + to_string(score));
+        window.draw(scoreText);
         drawPlayer(window, player, playerSprite);
 
         for(int i=0;i<s;i++){
@@ -165,13 +195,66 @@ int main()
         }
 
         if(moveClock.getElapsedTime().asMilliseconds() > 200){
-            movecentepede(cent,l);
+        for(int c = 0; c < centipedes.size(); c++)
+        {
+            movecentepede(&centipedes[c][0], centipedes[c].size());
+        }
             moveClock.restart();
         }
+        //centepede bullet collision
+for(int c = 0; c < centipedes.size(); c++)
+{
+    for(int i = 0; i < centipedes[c].size(); i++)
+      if(bullet[exists] == true){
+		float bx = bullet[x] + 16;
+		float by = bullet[y] + 16;
 
-        drawcentepede(window,cent,head,body);
-        moveplayer(player);
+		if(bx >= centipedes[c][i].getx() && bx <= centipedes[c][i].getx() + 32 &&
+		   by >= centipedes[c][i].gety() && by <= centipedes[c][i].gety() + 32)
+		{ 
+            if(centipedes[c][i].gettype()=="head"){
+                score+=20;
+            }else{
+                score+=10;
+            }
+			bullet[exists] = false;
 
+			
+	    	}
+        vector<centepede>& cent = centipedes[c];
+
+// split into two parts
+vector<centepede> firstPart(cent.begin(), cent.begin() + i);
+vector<centepede> secondPart(cent.begin() + i + 1, cent.end());
+
+// remove old centipede
+centipedes.erase(centipedes.begin() + c);
+
+// add new ones if not empty
+if(firstPart.size() > 0)
+{
+    firstPart[0].gettype() = "head";
+    centipedes.push_back(firstPart);
+}
+
+if(secondPart.size() > 0)
+{
+    secondPart[0].gettype() = "head";
+    centipedes.push_back(secondPart);
+}
+            i--;
+	    } 
+      }
+    }
+    for(int c = 0; c < centipedes.size(); c++)
+   {
+    drawcentepede(window, &centipedes[c][0], head, body, centipedes[c].size());
+   }
+        
+    if(pclock.getElapsedTime().asMilliseconds() > 80){
+           moveplayer(player);
+            pclock.restart();
+    }
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && !bullet[exists]){
             bullet[x]=player[x];
             bullet[y]=player[y]-boxPixelsY;
@@ -197,23 +280,49 @@ int main()
                     bullet[exists] = false;
 
                     if(mush[i].gethealth() <= 0){
+                        score+=1;
 						gameGrid[mush[i].getx()/32][mush[i].gety()/32] = 0;
-                        for(int j=i;j<s-1;j++)
+                        for(int j=i;j<s-1;j++){
                             mush[j]=mush[j+1];
-
+	   	}
                         s--;
                         i--;
                     }
                 }
             }
         }
+    for(int c = 0; c < centipedes.size(); c++){
+    for(int i = 0; i < centipedes[c].size(); i++){
+        if(player[x]+16>=centipedes[c][i].getx() && player[x]+16<=centipedes[c][i].getx()+32 &&
+           player[y]+16>=centipedes[c][i].gety() && player[y]+16<=centipedes[c][i].gety()+32)
+        {
+            flag=false;
+             break;
+            window.clear();
+           
+        }
+    }
+    }
+        window.display();
+    
 
+    while(window.isOpen()){
+        while(auto event = window.pollEvent()){
+            if(event->is<sf::Event::Closed>())
+                window.close();
+        }
+
+        window.clear();
+        drawgameover(window,gameover);
         window.display();
     }
 
     delete[] mush;
-    delete[] cent;
+  
 }
+
+
+
 void drawPlayer(sf::RenderWindow& window, float player[], sf::Sprite& playerSprite)
 {
     playerSprite.setPosition(sf::Vector2f(player[x], player[y]));
@@ -243,29 +352,31 @@ void drawBullet(sf::RenderWindow& window, float bullet[], sf::Sprite& bulletSpri
     bulletSprite.setPosition(sf::Vector2f(bullet[x], bullet[y]));
     window.draw(bulletSprite);
 }
+void drawgameover(sf::RenderWindow& window, sf::Sprite& gameover)
+{
+    gameover.setPosition(sf::Vector2f(0, 0));
+    window.draw(gameover);
+}
 
 void moveplayer(float player[])
 {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && player[x] > 0)
-        player[x] -= 0.5;
+        player[x] -= 32;
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) &&
         player[x] < resolutionX - boxPixelsX)
-        player[x] += 0.5;
+        player[x] += 32;
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) &&
         player[y] > resolutionY - (boxPixelsY * 5))
-        player[y] -= 0.5;
+        player[y] -= 32;
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) &&
         player[y] < resolutionY - boxPixelsY)
-        player[y] += 0.5;
+        player[y] += 32;
 }
 
-void drawcentepede(sf::RenderWindow& window, centepede* c,
-                    sf::Sprite& centipedehead,
-                    sf::Sprite& centipedesbody)
-{
+void drawcentepede(sf::RenderWindow& window, centepede* c,sf::Sprite& head,sf::Sprite& body,int l){
     for (int i = 0; i < l; i++)
     {
         if (c[i].gettype() == "head")
@@ -285,8 +396,8 @@ void movecentepede(centepede* c, int l)
 {
     int head = l - 1;
 
-    int oldx[12];
-    int oldy[12];
+    int *oldx=new int[l];
+    int *oldy=new int[l];
 
     for(int i = 0; i < l; i++)
     {
@@ -305,10 +416,11 @@ void movecentepede(centepede* c, int l)
     bool needTurn = false;
 
     // Wall detection
-    if(nextX < 0 || nextX >= resolutionX)
+    if(nextX < 0 || nextX >= resolutionX){
         needTurn = true;
 
     // Mushroom detection
+    }
     else if(gameGrid[nextX / 32][nextY / 32] == 1)
         needTurn = true;
 
