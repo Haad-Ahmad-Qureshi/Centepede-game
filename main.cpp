@@ -83,6 +83,7 @@ void drawMushroom(sf::RenderWindow& window, mushroom* m, sf::Sprite& sprite);
 void drawcentepede(sf::RenderWindow& window, centepede* c,sf::Sprite& head,sf::Sprite& body,int l);
 void movecentepede(centepede* c, int l);
 void drawgameover(sf::RenderWindow& window, sf::Sprite& gameover);
+void drawwin(sf::RenderWindow& window, sf::Sprite& win);
 
 // ---------------- MAIN ----------------
 int main()
@@ -103,11 +104,25 @@ int main()
         cout << "background.png failed to load\n";
     sf::Sprite bg(bgTex);
     bg.setColor(sf::Color(255,255,255,64));
+//game win texture//////////////////.......................................^^^^^
+sf::Texture gamewintex;
+if(!gamewintex.loadFromFile("Textures/win.jpeg"))
+    cout << "win.jpeg failed to load\n";
+sf::Sprite gamewin(gamewintex);
+sf::Vector2u imgS = gamewintex.getSize();
+float sX = (float)resolutionX / imgS.x;
+float sY = (float)resolutionY / imgS.y;
+gamewin.setScale({sX, sY});
+
+    ///game over texture//////////////////.......................................^^^^^
 sf::Texture gameovertex;
 if(!gameovertex.loadFromFile("Textures/over.jpeg"))
     cout << "over.jpeg failed to load\n";
 sf::Sprite gameover(gameovertex);
-    gameover.setTextureRect(sf::IntRect({0,0},{960,960}));
+sf::Vector2u imgSize = gameovertex.getSize();
+float scaleX = (float)resolutionX / imgSize.x;
+float scaleY = (float)resolutionY / imgSize.y;
+gameover.setScale({scaleX, scaleY});
 
 
     float player[2];
@@ -185,12 +200,17 @@ if (!font.openFromFile("Fonts/Roboto-Regular.ttf")) {
     cout << "Font failed to load\n";
 }
 sf::Text scoreText(font);
-scoreText.setCharacterSize(24);
+scoreText.setStyle(sf::Text::Bold);
+scoreText.setCharacterSize(30);
 scoreText.setFillColor(sf::Color::Red);
 scoreText.setPosition({10.f, 10.f});
-
-
-
+//total score
+sf::Text tscore(font);
+tscore.setStyle(sf::Text::Bold);
+tscore.setCharacterSize(30);
+tscore.setFillColor(sf::Color::Red);
+tscore.setPosition({20.f, 50.f});
+bool w=false;//for win or lose detection
 ////////////////////////////////////////////////////////////////////////////////////////////////////
     // ---------------- LOOP ----------------
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -340,6 +360,13 @@ for(int i=0;i<pmushrooms.size();i++){
         }
     }
     }
+
+        if(centipedes.size() == 0)
+        {
+            w=true;
+            flag=false;
+        }
+
         window.display();
     }
 
@@ -349,11 +376,19 @@ if(!flag){
             if(event->is<sf::Event::Closed>())
                 window.close();
         }
-
         window.clear();
+     if(w){
+
+                drawwin(window,gamewin);
+     }else{
+        
         drawgameover(window,gameover);
-        window.display();
+        
     }
+        tscore.setString("Total Score: " + to_string(score));
+        window.draw(tscore);
+    window.display();
+}
 }
     delete[] mush;
 
@@ -370,7 +405,11 @@ void drawMushroom(sf::RenderWindow& window, mushroom* m, sf::Sprite& mushroomSpr
     mushroomSprite.setPosition(sf::Vector2f(m->getx(), m->gety()));
     window.draw(mushroomSprite);
 }
-
+void drawwin(sf::RenderWindow& window, sf::Sprite& win)
+{
+    win.setPosition(sf::Vector2f(0, 0));
+    window.draw(win);
+}
 void moveBullet(float bullet[], sf::Clock& bulletClock)
 {
     if (bulletClock.getElapsedTime().asMilliseconds() < 20)
