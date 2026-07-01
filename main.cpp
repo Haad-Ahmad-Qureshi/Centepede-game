@@ -1,6 +1,7 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
+#include <vector>
 
 using namespace std;
 int score = 0;
@@ -88,30 +89,34 @@ int main()
 {
     srand(time(0));
 
-    sf::RenderWindow window(sf::VideoMode({resolutionX, resolutionY}), "Centipede");
+    sf::RenderWindow window(sf::VideoMode(sf::Vector2u(resolutionX, resolutionY)), "Centipede");
     window.setSize(sf::Vector2u(640, 640));
     window.setPosition(sf::Vector2i(100, 0));
 
     sf::Music bgMusic;
-    bgMusic.openFromFile("Music/field_of_hopes.ogg");
+    if(!bgMusic.openFromFile("Music/field_of_hopes.ogg"))
+        cout << "Music failed to load\n";
     bgMusic.play();
 
     sf::Texture bgTex;
-    bgTex.loadFromFile("Textures/background.png");
+    if(!bgTex.loadFromFile("Textures/background.png"))
+        cout << "background.png failed to load\n";
     sf::Sprite bg(bgTex);
     bg.setColor(sf::Color(255,255,255,64));
 sf::Texture gameovertex;
-gameovertex.loadFromFile("Textures/over.jpeg");
+if(!gameovertex.loadFromFile("Textures/over.jpeg"))
+    cout << "over.jpeg failed to load\n";
 sf::Sprite gameover(gameovertex);
     gameover.setTextureRect(sf::IntRect({0,0},{960,960}));
 
 
     float player[2];
     player[x] = (gameColumns / 2) * boxPixelsX;
-    player[y] = (gameRows * 3 / 4) * boxPixelsY;
+    player[y] = resolutionY - boxPixelsY;
 
     sf::Texture playerTex;
-    playerTex.loadFromFile("Textures/player.png");
+    if(!playerTex.loadFromFile("Textures/player.png"))
+        cout << "player.png failed to load\n";
     sf::Sprite playerSprite(playerTex);
     playerSprite.setTextureRect(sf::IntRect({0,0},{boxPixelsX,boxPixelsY}));
 
@@ -123,15 +128,18 @@ sf::Sprite gameover(gameovertex);
     sf::Clock bulletClock;
 
     sf::Texture bulletTex;
-    bulletTex.loadFromFile("Textures/bullet.png");
+    if(!bulletTex.loadFromFile("Textures/bullet.png"))
+        cout << "bullet.png failed to load\n";
     sf::Sprite bulletSprite(bulletTex);
     bulletSprite.setTextureRect(sf::IntRect({0,0},{boxPixelsX,boxPixelsY}));
 
     int s = rand()%11 + 20;
     mushroom* mush = new mushroom[s];
+vector<mushroom> pmushrooms;
 
     sf::Texture mushTex;
-    mushTex.loadFromFile("Textures/mushroom.png");
+    if(!mushTex.loadFromFile("Textures/mushroom.png"))
+        cout << "mushroom.png failed to load\n";
     sf::Sprite mushSprite(mushTex);
     mushSprite.setTextureRect(sf::IntRect({0,0},{boxPixelsX,boxPixelsY}));
 
@@ -139,11 +147,16 @@ sf::Sprite gameover(gameovertex);
         mush[i] = mushroom(rand()%gameColumns*32, rand()%(gameRows-5)*32);
 		gameGrid[mush[i].getx()/32][mush[i].gety()/32] = 1;
 }
+
+
+
 //centepede creation
 vector<vector<centepede>> centipedes;
     sf::Texture headTex, bodyTex;
-    headTex.loadFromFile("Textures/c_head_left_walk.png");
-    bodyTex.loadFromFile("Textures/c_body_left_walk.png");
+    if(!headTex.loadFromFile("Textures/c_head_left_walk.png"))
+        cout << "c_head_left_walk.png failed to load\n";
+    if(!bodyTex.loadFromFile("Textures/c_body_left_walk.png"))
+        cout << "c_body_left_walk.png failed to load\n";
 
     sf::Sprite head(headTex);
     head.setTextureRect(sf::IntRect({0,0},{boxPixelsX,boxPixelsY}));
@@ -158,7 +171,7 @@ for(int i = 0; i < 12; i++)
     first.push_back(centepede(i*32, 0, 1, "body"));
 }
 
-first[0].settype("head") ;
+first[12-1].settype("head") ;
 
 centipedes.push_back(first);
 
@@ -173,9 +186,14 @@ if (!font.openFromFile("Fonts/Roboto-Regular.ttf")) {
 }
 sf::Text scoreText(font);
 scoreText.setCharacterSize(24);
-scoreText.setFillColor(sf::Color::White);
+scoreText.setFillColor(sf::Color::Red);
 scoreText.setPosition({10.f, 10.f});
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
     // ---------------- LOOP ----------------
+////////////////////////////////////////////////////////////////////////////////////////////////////
     while(window.isOpen()&& flag==true)
     {
         while(auto event = window.pollEvent())
@@ -189,7 +207,10 @@ scoreText.setPosition({10.f, 10.f});
         scoreText.setString("Score: " + to_string(score));
         window.draw(scoreText);
         drawPlayer(window, player, playerSprite);
-
+        //draw mushrooma
+        for(int i=0;i<pmushrooms.size();i++){
+            drawMushroom(window,&pmushrooms[i],mushSprite);
+        }
         for(int i=0;i<s;i++){
             drawMushroom(window,&mush[i],mushSprite);
         }
@@ -204,7 +225,9 @@ scoreText.setPosition({10.f, 10.f});
         //centepede bullet collision
 for(int c = 0; c < centipedes.size(); c++)
 {
+    bool splitOccurred = false;
     for(int i = 0; i < centipedes[c].size(); i++)
+    {
       if(bullet[exists] == true){
 		float bx = bullet[x] + 16;
 		float by = bullet[y] + 16;
@@ -212,6 +235,10 @@ for(int c = 0; c < centipedes.size(); c++)
 		if(bx >= centipedes[c][i].getx() && bx <= centipedes[c][i].getx() + 32 &&
 		   by >= centipedes[c][i].gety() && by <= centipedes[c][i].gety() + 32)
 		{ 
+            if(by>=resolutionY - boxPixelsY*5 && by<resolutionY){
+            gameGrid[centipedes[c][i].getx()/32][centipedes[c][i].gety()/32] = 2;//poisonous mushroom is created here.
+            pmushrooms.push_back(mushroom(centipedes[c][i].getx(), centipedes[c][i].gety()));
+            }
             if(centipedes[c][i].gettype()=="head"){
                 score+=20;
             }else{
@@ -219,33 +246,33 @@ for(int c = 0; c < centipedes.size(); c++)
             }
 			bullet[exists] = false;
 
-			
+			vector<centepede> cent = centipedes[c];
+
+			vector<centepede> firstPart(cent.begin(), cent.begin() + i);
+			vector<centepede> secondPart(cent.begin() + i + 1, cent.end());
+
+			centipedes.erase(centipedes.begin() + c);
+
+			if(firstPart.size() > 0)
+			{
+			    firstPart[firstPart.size() - 1].settype("head");
+			    centipedes.push_back(firstPart);
+			}
+
+			if(secondPart.size() > 0)
+			{
+			    secondPart[secondPart.size() - 1].settype("head");
+			    centipedes.push_back(secondPart);
+			}
+
+			splitOccurred = true;
+			break;
 	    	}
-        vector<centepede>& cent = centipedes[c];
-
-// split into two parts
-vector<centepede> firstPart(cent.begin(), cent.begin() + i);
-vector<centepede> secondPart(cent.begin() + i + 1, cent.end());
-
-// remove old centipede
-centipedes.erase(centipedes.begin() + c);
-
-// add new ones if not empty
-if(firstPart.size() > 0)
-{
-    firstPart[0].gettype() = "head";
-    centipedes.push_back(firstPart);
-}
-
-if(secondPart.size() > 0)
-{
-    secondPart[0].gettype() = "head";
-    centipedes.push_back(secondPart);
-}
-            i--;
-	    } 
       }
     }
+    if(splitOccurred)
+        c--;
+}
     for(int c = 0; c < centipedes.size(); c++)
    {
     drawcentepede(window, &centipedes[c][0], head, body, centipedes[c].size());
@@ -280,7 +307,7 @@ if(secondPart.size() > 0)
                     bullet[exists] = false;
 
                     if(mush[i].gethealth() <= 0){
-                        score+=1;
+                        score+=5;
 						gameGrid[mush[i].getx()/32][mush[i].gety()/32] = 0;
                         for(int j=i;j<s-1;j++){
                             mush[j]=mush[j+1];
@@ -291,6 +318,18 @@ if(secondPart.size() > 0)
                 }
             }
         }
+        //player and mushroom collision
+for(int i=0;i<pmushrooms.size();i++){
+            if(player[x]<pmushrooms[i].getx()+32 && player[x]+16>pmushrooms[i].getx() &&
+               player[y]<pmushrooms[i].gety()+32 && player[y]+16>pmushrooms[i].gety())
+            {
+                flag=false;
+                break;
+            }
+        }
+
+
+//playr and centepede collision
     for(int c = 0; c < centipedes.size(); c++){
     for(int i = 0; i < centipedes[c].size(); i++){
         if(player[x]+16>=centipedes[c][i].getx() && player[x]+16<=centipedes[c][i].getx()+32 &&
@@ -298,14 +337,13 @@ if(secondPart.size() > 0)
         {
             flag=false;
              break;
-            window.clear();
-           
         }
     }
     }
         window.display();
-    
+    }
 
+if(!flag){
     while(window.isOpen()){
         while(auto event = window.pollEvent()){
             if(event->is<sf::Event::Closed>())
@@ -316,12 +354,10 @@ if(secondPart.size() > 0)
         drawgameover(window,gameover);
         window.display();
     }
-
-    delete[] mush;
-  
 }
+    delete[] mush;
 
-
+}
 
 void drawPlayer(sf::RenderWindow& window, float player[], sf::Sprite& playerSprite)
 {
@@ -376,7 +412,7 @@ void moveplayer(float player[])
         player[y] += 32;
 }
 
-void drawcentepede(sf::RenderWindow& window, centepede* c,sf::Sprite& head,sf::Sprite& body,int l){
+void drawcentepede(sf::RenderWindow& window, centepede* c,sf::Sprite& centipedehead,sf::Sprite& centipedesbody,int l){
     for (int i = 0; i < l; i++)
     {
         if (c[i].gettype() == "head")
@@ -415,19 +451,27 @@ void movecentepede(centepede* c, int l)
 
     bool needTurn = false;
 
-    // Wall detection
     if(nextX < 0 || nextX >= resolutionX){
         needTurn = true;
-
-    // Mushroom detection
     }
-    else if(gameGrid[nextX / 32][nextY / 32] == 1)
+    else if(gameGrid[nextX / 32][nextY / 32] != 0){
         needTurn = true;
+    }
 
     if(needTurn)
     {
-        c[head].sety(c[head].gety() + 32);
-        c[head].switchdirection();
+        if(nextY >= resolutionY - boxPixelsY)
+        {
+            c[head].switchdirection();
+        }
+        else
+        {
+            int newY = nextY + boxPixelsY;
+            if(newY >= resolutionY)
+                newY = resolutionY - boxPixelsY;
+            c[head].sety(newY);
+            c[head].switchdirection();
+        }
     }
     else
     {
@@ -440,4 +484,7 @@ void movecentepede(centepede* c, int l)
         c[i].setx(oldx[i + 1]);
         c[i].sety(oldy[i + 1]);
     }
+
+    delete[] oldx;
+    delete[] oldy;
 }
