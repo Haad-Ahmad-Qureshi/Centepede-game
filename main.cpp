@@ -73,7 +73,20 @@ public:
     void sethealth(){ health--; }
     int gethealth(){ return health; }
 };
+bool isClicked(sf::RectangleShape &btn, sf::RenderWindow &window)
+{
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+    {
+        sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
+        sf::Vector2f worldPos = window.mapPixelToCoords(pixelPos);
 
+        if (btn.getGlobalBounds().contains(worldPos))
+        {
+            return true;
+        }
+    }
+    return false;
+}
 // FUNCTIONS
 void drawPlayer(sf::RenderWindow& window, float player[], sf::Sprite& sprite);
 void moveplayer(float player[]);
@@ -210,12 +223,41 @@ tscore.setStyle(sf::Text::Bold);
 tscore.setCharacterSize(30);
 tscore.setFillColor(sf::Color::Red);
 tscore.setPosition({20.f, 50.f});
+
+
 bool w=false;//for win or lose detection
+
+
+sf::RectangleShape restartBtn, exitBtn;
+sf::Text restartText(font), exitText(font);
+
+// Restart Button
+restartBtn.setSize({200, 60});
+restartBtn.setFillColor(sf::Color::Green);
+restartBtn.setPosition({350, 600});
+restartText.setString("Restart");
+restartText.setCharacterSize(28);
+restartText.setFillColor(sf::Color::Black);
+restartText.setPosition({380, 610});
+// Exit Button
+exitBtn.setSize({200, 60});
+exitBtn.setFillColor(sf::Color::Red);
+exitBtn.setPosition({350, 700});
+
+exitText.setString("Exit");
+exitText.setCharacterSize(28);
+exitText.setFillColor(sf::Color::Black);
+exitText.setPosition({420, 710});
 ////////////////////////////////////////////////////////////////////////////////////////////////////
     // ---------------- LOOP ----------------
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-    while(window.isOpen()&& flag==true)
-    {
+while(window.isOpen() && flag==true)
+{
+   
+flag = true;
+w = false;
+while(window.isOpen())
+{
         while(auto event = window.pollEvent())
         {
             if(event->is<sf::Event::Closed>())
@@ -338,7 +380,7 @@ for(int c = 0; c < centipedes.size(); c++)
                 }
             }
         }
-        //player and mushroom collision
+        //player and poisonous mushroom collision
 for(int i=0;i<pmushrooms.size();i++){
             if(player[x]<pmushrooms[i].getx()+32 && player[x]+16>pmushrooms[i].getx() &&
                player[y]<pmushrooms[i].gety()+32 && player[y]+16>pmushrooms[i].gety())
@@ -348,8 +390,11 @@ for(int i=0;i<pmushrooms.size();i++){
             }
         }
 
+if(!flag){
+    break;
+}
 
-//playr and centepede collision
+//player and centepede collision
     for(int c = 0; c < centipedes.size(); c++){
     for(int i = 0; i < centipedes[c].size(); i++){
         if(player[x]+16>=centipedes[c][i].getx() && player[x]+16<=centipedes[c][i].getx()+32 &&
@@ -361,10 +406,15 @@ for(int i=0;i<pmushrooms.size();i++){
     }
     }
 
-        if(centipedes.size() == 0)
+if(!flag){
+    break;
+}
+
+    if(centipedes.size() == 0)
         {
             w=true;
             flag=false;
+            break;
         }
 
         window.display();
@@ -376,21 +426,78 @@ if(!flag){
             if(event->is<sf::Event::Closed>())
                 window.close();
         }
-        window.clear();
-     if(w){
 
-                drawwin(window,gamewin);
-     }else{
-        
-        drawgameover(window,gameover);
-        
-    }
+        window.clear();
+
+        if(w){
+            drawwin(window,gamewin);
+        }else{
+            drawgameover(window,gameover);
+        }
+
         tscore.setString("Total Score: " + to_string(score));
         window.draw(tscore);
-    window.display();
+
+        //DRAW BUTTONS
+        window.draw(restartBtn);
+        window.draw(restartText);
+        window.draw(exitBtn);
+        window.draw(exitText);
+
+        if(isClicked(restartBtn, window))
+        {
+            flag=true;
+            sf::sleep(sf::milliseconds(150)); // prevent double click
+
+            score = 0;
+
+            // reset player
+            player[x] = (gameColumns / 2) * boxPixelsX;
+            player[y] = resolutionY - boxPixelsY;
+
+            // reset bullet
+            bullet[exists] = false;
+
+            // reset centipede
+            centipedes.clear();
+            vector<centepede> first;
+
+            for(int i = 0; i < 12; i++){
+                first.push_back(centepede(i*32, 0, 1, "body"));
+            }
+
+            first[11].settype("head");
+            centipedes.push_back(first);
+
+            // reset mushrooms
+            delete[] mush;
+            s = rand()%11 + 20;
+            mush = new mushroom[s];
+
+            // clear grid
+            for(int i=0;i<gameRows;i++)
+                for(int j=0;j<gameColumns;j++)
+                    gameGrid[i][j]=0;
+
+            for(int i=0;i<s;i++){
+                mush[i] = mushroom(rand()%gameColumns*32, rand()%(gameRows-5)*32);
+                gameGrid[mush[i].getx()/32][mush[i].gety()/32] = 1;
+            }
+
+            pmushrooms.clear();
+
+            break;  //VERY IMPORTANT
+        }
+        if(isClicked(exitBtn, window)){
+            window.close();
+        }
+
+        window.display();
+    }
 }
 }
     delete[] mush;
+
 
 }
 
