@@ -97,7 +97,7 @@ void drawcentepede(sf::RenderWindow& window, centepede* c,sf::Sprite& head,sf::S
 void movecentepede(centepede* c, int l);
 void drawgameover(sf::RenderWindow& window, sf::Sprite& gameover);
 void drawwin(sf::RenderWindow& window, sf::Sprite& win);
-
+void drawstartpage(sf::RenderWindow&window, sf::Sprite& startpage);
 // ---------------- MAIN ----------------
 int main()
 {
@@ -117,6 +117,16 @@ int main()
         cout << "background.png failed to load\n";
     sf::Sprite bg(bgTex);
     bg.setColor(sf::Color(255,255,255,64));
+//start page texture//////////////////.......................................^^^^^
+sf::Texture startpageTex;
+if(!startpageTex.loadFromFile("Textures/start.jfif"))
+    cout << "startpage.png failed to load\n";   
+    sf::Sprite startpage(startpageTex);
+    sf::Vector2u startimgS = startpageTex.getSize();    
+    float startx = (float)resolutionX / startimgS.x;
+    float starty = (float)resolutionY / startimgS.y;
+    startpage.setScale({startx, starty});
+
 //game win texture//////////////////.......................................^^^^^
 sf::Texture gamewintex;
 if(!gamewintex.loadFromFile("Textures/win.jpeg"))
@@ -227,33 +237,179 @@ tscore.setPosition({20.f, 50.f});
 
 bool w=false;//for win or lose detection
 
+int cSpeed = 200;
+int mushExtra = 0;
 
-sf::RectangleShape restartBtn, exitBtn;
-sf::Text restartText(font), exitText(font);
+sf::RectangleShape restartBtn, exitBtn,startBtn,easy,medium,hard,backBtn;
+sf::Text restartText(font), exitText(font),startText(font),easyText(font),mediumText(font),hardText(font),backText(font),instructionsText(font);
 
 // Restart Button
 restartBtn.setSize({200, 60});
 restartBtn.setFillColor(sf::Color::Green);
-restartBtn.setPosition({350, 600});
+restartBtn.setPosition({350, 780});
 restartText.setString("Restart");
 restartText.setCharacterSize(28);
-restartText.setFillColor(sf::Color::Black);
-restartText.setPosition({380, 610});
+restartText.setPosition({restartBtn.getPosition().x + 40, restartBtn.getPosition().y + 10});
+restartText.setFillColor(sf::Color::White);
 // Exit Button
 exitBtn.setSize({200, 60});
 exitBtn.setFillColor(sf::Color::Red);
-exitBtn.setPosition({350, 700});
-
+exitBtn.setPosition({350, 860});
 exitText.setString("Exit");
 exitText.setCharacterSize(28);
-exitText.setFillColor(sf::Color::Black);
-exitText.setPosition({420, 710});
+
+startBtn.setSize({200, 60});
+startBtn.setFillColor(sf::Color::Blue);
+startBtn.setPosition({350, 400}); 
+startText.setString("Instructions");
+startText.setCharacterSize(28);
+startText.setPosition({startBtn.getPosition().x + 25, startBtn.getPosition().y + 10});
+startText.setFillColor(sf::Color::White);
+
+easy.setSize({200, 60});
+easy.setFillColor(sf::Color::Black);
+easy.setPosition({350, 500});
+easyText.setString("Easy");
+easyText.setCharacterSize(28);
+easyText.setPosition({easy.getPosition().x + 60, easy.getPosition().y + 10});
+easyText.setFillColor(sf::Color::White);
+
+medium.setSize({200, 60});
+medium.setFillColor(sf::Color::Black);
+medium.setPosition({350, 600});
+mediumText.setString("Medium");
+mediumText.setCharacterSize(28);
+mediumText.setPosition({medium.getPosition().x + 40, medium.getPosition().y + 10});
+mediumText.setFillColor(sf::Color::White);
+
+hard.setSize({200, 60});
+hard.setFillColor(sf::Color::Black);
+hard.setPosition({350, 700});
+hardText.setString("Hard");
+hardText.setCharacterSize(28);
+hardText.setPosition({hard.getPosition().x + 70, hard.getPosition().y + 10});
+hardText.setFillColor(sf::Color::White);
+
+backBtn.setSize({200, 60});
+backBtn.setFillColor(sf::Color::White);
+backBtn.setPosition({350, 850});
+backText.setString("Back");
+backText.setCharacterSize(28);
+backText.setFillColor(sf::Color::Black);
+backText.setPosition({backBtn.getPosition().x + 65, backBtn.getPosition().y + 10});
+
+instructionsText.setString(
+    "HOW TO PLAY\n\n"
+    "Move: LEFT / RIGHT / UP / DOWN arrow keys\n"
+    "Shoot: SPACE\n\n"
+    "Shoot the centipede to split it and score points\n"
+    "Shoot mushrooms to weaken and destroy them\n"
+    "Avoid touching the centipede or any mushroom\n"
+    "Poisonous mushrooms left behind are deadly - avoid them\n\n"
+    "Clear every centipede segment to win!"
+);
+instructionsText.setCharacterSize(26);
+instructionsText.setFillColor(sf::Color::White);
+instructionsText.setPosition({60.f, 100.f});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
     // ---------------- LOOP ----------------
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 while(window.isOpen() && flag==true)
 {
-   
+   exitBtn.setPosition({350, 820});
+   exitText.setPosition({exitBtn.getPosition().x + 65, exitBtn.getPosition().y + 10});
+   while(window.isOpen()){
+        while(auto event = window.pollEvent())
+        {
+            if(event->is<sf::Event::Closed>())
+                window.close();
+        }
+
+        window.clear();
+    drawstartpage(window,startpage);
+//draw button
+       window.draw(startBtn);
+       window.draw(startText);//making it the intruction button 
+        window.draw(easy);
+        window.draw(easyText);
+        window.draw(medium);
+        window.draw(mediumText);
+        window.draw(hard);
+        window.draw(hardText);
+        window.draw(exitBtn);
+        window.draw(exitText);
+
+        window.display();
+
+        if(isClicked(startBtn, window)){
+            sf::sleep(sf::milliseconds(150)); // prevent double click
+
+            while(window.isOpen()){
+                while(auto event = window.pollEvent())
+                {
+                    if(event->is<sf::Event::Closed>())
+                        window.close();
+                }
+
+                window.clear(sf::Color::Black);
+                window.draw(instructionsText);
+                window.draw(backBtn);
+                window.draw(backText);
+                window.display();
+
+                if(isClicked(backBtn, window)){
+                    sf::sleep(sf::milliseconds(150));
+                    break;
+                }
+            }
+        }
+
+        if(isClicked(easy, window)){
+            sf::sleep(sf::milliseconds(150)); // prevent double click
+            cSpeed = 250;
+            mushExtra = 0;
+            flag=false;
+            break;
+        }
+
+        if(isClicked(medium, window)){
+            sf::sleep(sf::milliseconds(150)); // prevent double click
+            cSpeed = 180;
+            mushExtra = 10;
+            flag=false;
+            break;
+        }
+
+        if(isClicked(hard, window)){
+            sf::sleep(sf::milliseconds(150)); // prevent double click
+            cSpeed = 120;
+            mushExtra = 20;
+            flag=false;
+            break;
+        }
+
+        if(isClicked(exitBtn, window)){
+            window.close();
+        }
+   }
+
+exitBtn.setPosition({350, 860});
+exitText.setPosition({exitBtn.getPosition().x + 65, exitBtn.getPosition().y + 10});
+
+delete[] mush;
+s = rand()%11 + 20 + mushExtra;
+mush = new mushroom[s];
+
+for(int i=0;i<gameRows;i++)
+    for(int j=0;j<gameColumns;j++)
+        gameGrid[i][j]=0;
+
+for(int i=0;i<s;i++){
+    mush[i] = mushroom(rand()%gameColumns*32, rand()%(gameRows-5)*32);
+    gameGrid[mush[i].getx()/32][mush[i].gety()/32] = 1;
+}
+
 flag = true;
 w = false;
 while(window.isOpen())
@@ -277,7 +433,7 @@ while(window.isOpen())
             drawMushroom(window,&mush[i],mushSprite);
         }
 
-        if(moveClock.getElapsedTime().asMilliseconds() > 200){
+        if(moveClock.getElapsedTime().asMilliseconds() > cSpeed){
         for(int c = 0; c < centipedes.size(); c++)
         {
             movecentepede(&centipedes[c][0], centipedes[c].size());
@@ -471,7 +627,7 @@ if(!flag){
 
             // reset mushrooms
             delete[] mush;
-            s = rand()%11 + 20;
+            s = rand()%11 + 20 + mushExtra;
             mush = new mushroom[s];
 
             // clear grid
@@ -512,11 +668,7 @@ void drawMushroom(sf::RenderWindow& window, mushroom* m, sf::Sprite& mushroomSpr
     mushroomSprite.setPosition(sf::Vector2f(m->getx(), m->gety()));
     window.draw(mushroomSprite);
 }
-void drawwin(sf::RenderWindow& window, sf::Sprite& win)
-{
-    win.setPosition(sf::Vector2f(0, 0));
-    window.draw(win);
-}
+
 void moveBullet(float bullet[], sf::Clock& bulletClock)
 {
     if (bulletClock.getElapsedTime().asMilliseconds() < 20)
@@ -534,12 +686,21 @@ void drawBullet(sf::RenderWindow& window, float bullet[], sf::Sprite& bulletSpri
     bulletSprite.setPosition(sf::Vector2f(bullet[x], bullet[y]));
     window.draw(bulletSprite);
 }
-void drawgameover(sf::RenderWindow& window, sf::Sprite& gameover)
-{
-    gameover.setPosition(sf::Vector2f(0, 0));
-    window.draw(gameover);
-}
-
+            void drawgameover(sf::RenderWindow& window, sf::Sprite& gameover)
+            {
+                gameover.setPosition(sf::Vector2f(0, 0));
+                window.draw(gameover);
+ 
+            }
+            void drawwin(sf::RenderWindow& window, sf::Sprite& win)
+            {
+                win.setPosition(sf::Vector2f(0, 0));
+                window.draw(win);
+            }
+            void drawstartpage(sf::RenderWindow&window, sf::Sprite& startpage){
+                startpage.setPosition(sf::Vector2f(0, 0));
+                window.draw(startpage);
+            }
 void moveplayer(float player[])
 {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && player[x] > 0)
