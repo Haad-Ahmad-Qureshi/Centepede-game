@@ -112,6 +112,21 @@ int main()
         cout << "Music failed to load\n";
     bgMusic.play();
 
+    sf::SoundBuffer oneUpBuffer;
+    if(!oneUpBuffer.loadFromFile("Sound Effects/1up.wav"))
+        cout << "1up.wav failed to load\n";
+    sf::Sound oneUpSound(oneUpBuffer);
+
+    sf::SoundBuffer fireBuffer;
+    if(!fireBuffer.loadFromFile("Sound Effects/fire1.wav"))
+        cout << "fire1.wav failed to load\n";
+    sf::Sound fireSound(fireBuffer);
+
+    sf::SoundBuffer killBuffer;
+    if(!killBuffer.loadFromFile("Sound Effects/kill.wav"))
+        cout << "kill.wav failed to load\n";
+    sf::Sound killSound(killBuffer);
+
     sf::Texture bgTex;
     if(!bgTex.loadFromFile("Textures/background.png"))
         cout << "background.png failed to load\n";
@@ -462,6 +477,8 @@ for(int c = 0; c < centipedes.size(); c++)
             }else{
                 score+=10;
             }
+			killSound.play();
+			oneUpSound.play();
 			bullet[exists] = false;
 
 			vector<centepede> cent = centipedes[c];
@@ -504,6 +521,7 @@ for(int c = 0; c < centipedes.size(); c++)
             bullet[x]=player[x];
             bullet[y]=player[y]-boxPixelsY;
             bullet[exists]=true;
+            fireSound.play();
         }
 
         if(bullet[exists]){
@@ -526,6 +544,8 @@ for(int c = 0; c < centipedes.size(); c++)
 
                     if(mush[i].gethealth() <= 0){
                         score+=5;
+						killSound.play();
+						oneUpSound.play();
 						gameGrid[mush[i].getx()/32][mush[i].gety()/32] = 0;
                         for(int j=i;j<s-1;j++){
                             mush[j]=mush[j+1];
